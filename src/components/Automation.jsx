@@ -1,8 +1,8 @@
 import React from 'react';
 
-const Automation = ({ automation, setFilter }) => {
+const Automation = ({ automation }) => {
   return (
-    <div className="automation-container" onClick={() => setFilter(automation.slug.split('-')[0])}>
+    <div className="automation-container">
       <img
         className="icon"
         src={automation.sites[0].logoSmall2x}

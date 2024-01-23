@@ -1,16 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  faChevronLeft,
-  faChevronRight,
-  faPlus,
-  faRightLeft,
-  faRotateLeft,
-  faTv,
-  faXmark
-} from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft, faChevronRight, faRotateLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { defaultFilters } from '../App';
+import FilterList from './FilterList';
 
-const Filters = ({ filter, setFilter }) => {
+const Filters = ({ filters, setFilters, allAutomations }) => {
   const [showSiteOptions, setShowSiteOptions] = useState(false);
   const [showCategoryOptions, setShowCategoryOptions] = useState(false);
   const siteDropdownRef = useRef(null);
@@ -19,129 +13,96 @@ const Filters = ({ filter, setFilter }) => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const categoryDropdownRef = useRef(null);
 
-  const siteOptions = ['ProductHunt', 'Indeed', 'LinkedIn', 'Eventbrite'];
+  const [sites, setSites] = useState([]);
+  const filtersContainerRef = useRef(null);
 
-  const handleSiteOptionClick = (option) => {
-    if (selectedSiteOptions.includes(option)) {
-      setSelectedSiteOptions((prevOptions) =>
-        prevOptions.filter((siteOption) => siteOption !== option)
-      );
-    } else {
-      setSelectedSiteOptions((prevOptions) => [...prevOptions, option]);
-    }
+  // Remove duplicate sites for filter options
+  useEffect(() => {
+    const uniqueSiteTitles = Array.from(
+      new Set(allAutomations.map((automation) => automation.sites[0].title))
+    );
+    setSites(uniqueSiteTitles);
+  }, []);
 
-    setFilter(option);
-  };
+  // Function to scroll user to start/end of filters
+  const handleArrowClick = (direction) => {
+    const container = filtersContainerRef.current;
 
-  const handleClickOutside = (event) => {
-    if (
-      siteDropdownRef.current &&
-      !siteDropdownRef.current.contains(event.target) &&
-      categoryDropdownRef.current &&
-      !categoryDropdownRef.current.contains(event.target)
-    ) {
-      setShowSiteOptions(false);
-      setShowCategoryOptions(false);
+    if (!container) return;
+
+    if (direction === 'left') {
+      container.scrollTo({ left: 0, behavior: 'smooth' });
+    } else if (direction === 'right') {
+      container.scrollTo({ left: container.scrollWidth, behavior: 'smooth' });
     }
   };
 
+  // Reset to initial values
   const handleResetFilters = () => {
-    setFilter('');
+    setFilters(defaultFilters);
     setSelectedSiteOptions([]);
     setShowSiteOptions(false);
     setSelectedCategory('');
     setShowCategoryOptions(false);
   };
 
+  // Function to close both dropdown lists if clicked outside of element
+  const handleOutsideClick = (event) => {
+    if (
+      siteDropdownRef.current &&
+      !siteDropdownRef.current.contains(event.target) &&
+      !event.target.closest('.filter-dropdown')
+    ) {
+      setShowSiteOptions(false);
+    }
+
+    if (
+      categoryDropdownRef.current &&
+      !categoryDropdownRef.current.contains(event.target) &&
+      !event.target.closest('.filter-dropdown')
+    ) {
+      setShowCategoryOptions(false);
+    }
+  };
+
+  // To trigger the above function
   useEffect(() => {
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleOutsideClick);
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('mousedown', handleOutsideClick);
     };
   }, []);
   return (
     <div className="filters-container">
-      <FontAwesomeIcon icon={faChevronLeft} className="arrow-icon" />
+      <FontAwesomeIcon
+        icon={faChevronLeft}
+        className="arrow-icon"
+        onClick={() => handleArrowClick('left')}
+      />
 
-      <div className="filters">
-        <div
-          className={`filter ${filter === 'scrape' && 'selected'}`}
-          onClick={() => setFilter(filter === 'scrape' ? '' : 'scrape')}>
-          <FontAwesomeIcon icon={faRightLeft} className="extract-icon fa-icon" /> Extract Data
-        </div>
+      <FilterList
+        filters={filters}
+        setFilters={setFilters}
+        sites={sites}
+        selectedSiteOptions={selectedSiteOptions}
+        setSelectedSiteOptions={setSelectedSiteOptions}
+        filtersContainerRef={filtersContainerRef}
+        siteDropdownRef={siteDropdownRef}
+        categoryDropdownRef={categoryDropdownRef}
+        showSiteOptions={showSiteOptions}
+        setShowSiteOptions={setShowSiteOptions}
+        showCategoryOptions={showCategoryOptions}
+        setShowCategoryOptions={setShowCategoryOptions}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+      />
 
-        <div
-          className={`filter ${filter === 'monitor' && 'selected'}`}
-          onClick={() => setFilter(filter === 'monitor' ? '' : 'monitor')}>
-          <FontAwesomeIcon icon={faTv} className="fa-icon" /> Monitoring
-        </div>
-
-        <div>
-          <div
-            className={`filter ${filter.startsWith('site') && 'selected'}`}
-            onClick={() => setShowSiteOptions(!showSiteOptions)}>
-            <FontAwesomeIcon icon={faPlus} className="fa-icon" /> Filter By Site
-          </div>
-          {showSiteOptions && (
-            <div ref={siteDropdownRef} className={`dropdown ${showSiteOptions && 'show'}`}>
-              {siteOptions.map((option) => {
-                const isOptionSelected = selectedSiteOptions.find(
-                  (siteOption) => siteOption === option
-                );
-
-                return (
-                  <div
-                    key={option}
-                    className={`dropdown-option ${isOptionSelected && 'selected'}`}
-                    onClick={() => handleSiteOptionClick(option)}>
-                    <span className="text">{option}</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {selectedSiteOptions.map((option) => (
-          <div
-            className="filter selected"
-            key={option}
-            onClick={() => handleSiteOptionClick(option)}>
-            {option}
-            <FontAwesomeIcon icon={faXmark} className="select-filter-icon" />
-          </div>
-        ))}
-
-        <div>
-          <div
-            className={`filter ${filter === 'category' && 'selected'}`}
-            onClick={() => setShowCategoryOptions(!showCategoryOptions)}>
-            <FontAwesomeIcon icon={faPlus} className="fa-icon" /> Filter By Category
-          </div>
-          {showCategoryOptions && (
-            <div ref={categoryDropdownRef} className={`dropdown ${showCategoryOptions && 'show'}`}>
-              {['SEO', 'Competitive Intelligence'].map((category) => (
-                <div
-                  key={category}
-                  className={`dropdown-option ${selectedCategory === category && 'selected'}`}
-                  onClick={() => setSelectedCategory(category)}>
-                  <span className="text">{category}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {selectedCategory && (
-          <div className="filter selected" onClick={() => setSelectedCategory('')}>
-            {selectedCategory}
-            <FontAwesomeIcon icon={faXmark} className="select-filter-icon" />
-          </div>
-        )}
-      </div>
-
-      <FontAwesomeIcon icon={faChevronRight} className="arrow-icon" />
+      <FontAwesomeIcon
+        icon={faChevronRight}
+        className="arrow-icon"
+        onClick={() => handleArrowClick('right')}
+      />
 
       <FontAwesomeIcon
         icon={faRotateLeft}

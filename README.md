@@ -4,6 +4,14 @@ This project was setup with the following modules; create-react-app for installa
 
 # To install packages
 
+Please change directory and pull latest changes:
+
+### `cd main`
+
+### `git pull`
+
+# Start Project
+
 To run this project locally on localhost: 3000, please run:
 
 ### `npm start`
